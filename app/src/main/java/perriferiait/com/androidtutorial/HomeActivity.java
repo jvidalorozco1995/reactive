@@ -53,7 +53,7 @@ public class HomeActivity extends AppCompatActivity {
         recyclerView.setAdapter(stockDataAdapter);
 //        Observable.just("APPLE","GOOGLE","TWRITER")
 //                .subscribe(stockSymbol ->
-//                        stockDataAdapter.fgadd(stockSymbol));
+//                        stockDataAdapter.fgadfdfd(stockSymbol));
         Observable.just(
                 new StockUpdate("GOOGLE", 12.43, new Date()),
                 new StockUpdate("APPLE", 645.1, new Date()),
