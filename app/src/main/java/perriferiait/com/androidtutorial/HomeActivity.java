@@ -12,7 +12,12 @@ import java.util.Date;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.Observable;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
+import perriferiait.com.androidtutorial.yahoo.RetrofitYahooServiceFactory;
+import perriferiait.com.androidtutorial.yahoo.YahooService;
 
 
 public class HomeActivity extends AppCompatActivity {
@@ -44,6 +49,12 @@ public class HomeActivity extends AppCompatActivity {
         Observable.just("Hello ! please use this app responsibly")
                 .subscribe(helloText::setText);
 
+        YahooService yahooService = new RetrofitYahooServiceFactory().create();
+
+        //Parametros del query
+        String query = "select * from yahoo.finance.quote where symbol in ('YHOO','AAPL','GOOG','MSFT')";
+        String env = "store://datatables.org/alltableswithkeys";
+
 
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
@@ -51,17 +62,40 @@ public class HomeActivity extends AppCompatActivity {
 
         stockDataAdapter = new StockDataAdapter();
         recyclerView.setAdapter(stockDataAdapter);
+
+        //Subscripcion al servicio
+        yahooService.yglQuery(query, env)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(data -> log(
+                        data.getQuery().getResults().getQuote().get(0).getSymbol()
+                ));
 //        Observable.just("APPLE","GOOGLE","TWRITER")
 //                .subscribe(stockSymbol ->
 //                        stockDataAdapter.fgadfdfd(stockSymbol));
-        Observable.just(
+
+
+      /*  Observable.just(
                 new StockUpdate("GOOGLE", 12.43, new Date()),
                 new StockUpdate("APPLE", 645.1, new Date()),
                 new StockUpdate("TWRITTER", 1.43, new Date())
         ).subscribe(stockUpdate -> {
             Log.d(HomeActivity.class.getSimpleName(),"New Update ".concat(stockUpdate.getStockSymbol()));
             stockDataAdapter.add(stockUpdate);
-        });
+        });*/
 
     }
+
+    private void log(Throwable throwable) {
+        Log.e("APP", "Error", throwable);
+    }
+
+    private void log(String stage, String item) {
+        Log.d("APP", stage + ":" + Thread.currentThread().getName() + ":" + item);
+    }
+
+    private void log(String stage) {
+        Log.d("APP", stage + ":" + Thread.currentThread().getName());
+    }
+
 }

@@ -28,5 +28,8 @@ public class RetrofitYahooServiceFactory {
             .baseUrl("https://query.yahooapis.com/v1/public/")
             .build();
 
+    public YahooService create() {
+        return retrofit.create(YahooService.class);
+    }
 
 }

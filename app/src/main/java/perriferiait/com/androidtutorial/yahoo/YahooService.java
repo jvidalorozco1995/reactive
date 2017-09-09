@@ -1,13 +1,13 @@
 package perriferiait.com.androidtutorial.yahoo;
 
 import io.reactivex.Single;
-import perriferiait.com.androidtutorial.yahoo.json.YahooServiceResult;
+import perriferiait.com.androidtutorial.yahoo.json.YahooStockResult;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
 public interface YahooService {
-    @GET("")
-    Single<YahooServiceResult> yglQuery(@Query("q") String query, @Query("env") String env);
+    @GET("yql?format=json")
+    Single<YahooStockResult> yglQuery(@Query("q") String query, @Query("env") String env);
 }
 
 /*
