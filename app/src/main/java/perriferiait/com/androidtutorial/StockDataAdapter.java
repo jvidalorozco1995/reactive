@@ -25,7 +25,7 @@ import butterknife.ButterKnife;
 public class StockDataAdapter extends RecyclerView.Adapter<StockDataAdapter.StockUpdateViewHolder> {
 
 
-        private final List<StockUpdate> data = new ArrayList<>();
+    private final List<StockUpdate> data = new ArrayList<>();
 
     @Override
     public StockUpdateViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -40,7 +40,9 @@ public class StockDataAdapter extends RecyclerView.Adapter<StockDataAdapter.Stoc
     public void onBindViewHolder(StockUpdateViewHolder holder, int position) {
 
         holder.setStocksymbol(data.get(position).getStockSymbol());
-        holder.setPrice(data.get(position).getPrice());
+        if (data.get(position).getPrice() != null) {
+            holder.setPrice(data.get(position).getPrice());
+        }
         holder.setDate(data.get(position).getDate());
 
 
@@ -51,9 +53,21 @@ public class StockDataAdapter extends RecyclerView.Adapter<StockDataAdapter.Stoc
         return data.size();
     }
 
-    public void add(StockUpdate stockSymbol) {
+    /*public void add(StockUpdate stockSymbol) {
         this.data.add(stockSymbol);
         notifyItemInserted(data.size() - 1);
+    }*/
+    public void add(StockUpdate newStockUpdate) {
+        for (StockUpdate stockUpdate : data) {
+            if (stockUpdate.getStockSymbol().equals(newStockUpdate.getStockSymbol())) {
+                if (stockUpdate.getPrice() != null && stockUpdate.getPrice().equals(newStockUpdate.getPrice())) {
+                    return;
+                }
+                break;
+            }
+        }
+        this.data.add(0, newStockUpdate);
+        notifyItemChanged(0);
     }
 
     protected static class StockUpdateViewHolder extends RecyclerView.ViewHolder {
@@ -67,16 +81,17 @@ public class StockDataAdapter extends RecyclerView.Adapter<StockDataAdapter.Stoc
         @BindView(R.id.stock_item_price)
         TextView price;
 
-        private static  final NumberFormat PRICE_FORMAT = new DecimalFormat("#0.00");
+        private static final NumberFormat PRICE_FORMAT = new DecimalFormat("#0.00");
 
-        public void setStocksymbol(String stocksymbol){
+        public void setStocksymbol(String stocksymbol) {
             this.stocksymbol.setText(stocksymbol);
         }
-        public void setPrice(BigDecimal price){
+
+        public void setPrice(BigDecimal price) {
             this.price.setText(PRICE_FORMAT.format(price.floatValue()));
         }
 
-        public void setDate(Date date){
+        public void setDate(Date date) {
             this.date.setText(DateFormat.getInstance().format(date));
         }
 

@@ -8,6 +8,7 @@ import android.util.Log;
 import android.widget.TextView;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -70,6 +71,40 @@ public class HomeActivity extends AppCompatActivity {
                 .subscribe(data -> log(
                         data.getQuery().getResults().getQuote().get(0).getSymbol()
                 ));
+
+        yahooService.yglQuery(query, env)
+                .subscribeOn(Schedulers.io())
+                .toObservable()
+                .map(r -> r.getQuery().getResults().getQuote());
+
+       /* yahooService.yglQuery(query, env)
+                .subscribeOn(Schedulers.io())
+                .toObservable()
+                .map(r -> r.getQuery().getResults().getQuote())
+                .flatMap(Observable::fromIterable)
+                .map(StockUpdate::create)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(stockUpdate -> {
+                    Log.d("APP", "New Update" + stockUpdate.getStockSymbol());
+                    stockDataAdapter.add(stockUpdate);
+                });*/
+
+        //Cada 5 segundos refresca
+        Observable.interval(0, 5, TimeUnit.SECONDS)
+                .flatMap(i -> yahooService.yglQuery(query, env)
+                        .toObservable()
+                )
+                .subscribeOn(Schedulers.io())
+                .map(r -> r.getQuery().getResults().getQuote())
+                .flatMap(Observable::fromIterable)
+                .map(StockUpdate::create)
+                //  .doOnNext(this::saveStockUpdate)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(stockUpdate -> {
+                    Log.d("APP", "New Update" + stockUpdate.getStockSymbol());
+                    stockDataAdapter.add(stockUpdate);
+                });
+
 //        Observable.just("APPLE","GOOGLE","TWRITER")
 //                .subscribe(stockSymbol ->
 //                        stockDataAdapter.fgadfdfd(stockSymbol));
@@ -85,6 +120,7 @@ public class HomeActivity extends AppCompatActivity {
         });*/
 
     }
+
 
     private void log(Throwable throwable) {
         Log.e("APP", "Error", throwable);

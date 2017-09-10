@@ -26,4 +26,8 @@ public class YahooStockQuote {
     public String getSymbol() {
         return symbol;
     }
+
+    public BigDecimal getLastTradePriceOnly() {
+        return lastTradePriceOnly;
+    }
 }

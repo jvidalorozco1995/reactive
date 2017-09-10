@@ -2,6 +2,8 @@ package perriferiait.com.androidtutorial.yahoo.json;
 
 import java.util.Date;
 
+import perriferiait.com.androidtutorial.StockUpdate;
+
 public class YahooStockQuery {
 
     private int count;
@@ -15,4 +17,6 @@ public class YahooStockQuery {
     public YahooStockResults getResults() {
         return results;
     }
+
+
 }
