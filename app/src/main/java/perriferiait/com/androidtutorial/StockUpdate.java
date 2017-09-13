@@ -12,6 +12,7 @@ import perriferiait.com.androidtutorial.yahoo.json.YahooStockQuote;
 
 public class StockUpdate implements Serializable {
 
+    private Integer Id;
     private final String stockSymbol;
     private final BigDecimal price;
     private final Date date;
@@ -36,5 +37,9 @@ public class StockUpdate implements Serializable {
 
     public static StockUpdate create(YahooStockQuote r) {
         return new StockUpdate(r.getSymbol(), r.getLastTradePriceOnly(), new Date());
+    }
+
+    public Integer getId() {
+        return Id;
     }
 }

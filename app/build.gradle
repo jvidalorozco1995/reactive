@@ -35,6 +35,11 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:26.+'
     compile 'com.android.support:cardview-v7:26.+'
 
+//StorIO
+    compile 'com.pushtorefresh.storio:sqlite:1.13.0'
+    compile 'com.pushtorefresh.storio:sqlite-annotations:1.13.0'
+
+    annotationProcessor 'com.pushtorefresh.storio:sqlite-annotations-processor:1.13.0'
 
     //Retrofit
     compile 'com.squareup.retrofit2:retrofit:2.3.0'
