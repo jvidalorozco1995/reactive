@@ -5,7 +5,11 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.pushtorefresh.storio.sqlite.StorIOSQLite;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +23,7 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import perriferiait.com.androidtutorial.yahoo.RetrofitYahooServiceFactory;
 import perriferiait.com.androidtutorial.yahoo.YahooService;
+import perriferiait.com.androidtutorial.yahoo.storio.StorIOFactory;
 
 
 public class HomeActivity extends AppCompatActivity {
@@ -31,6 +36,8 @@ public class HomeActivity extends AppCompatActivity {
     @BindView(R.id.stock_updates_recyclerview)
     RecyclerView recyclerView;
 
+    @BindView(R.id. no_data_available)
+    TextView noDataAvailableView;
 
     private LinearLayoutManager layoutManager;
     private StockDataAdapter stockDataAdapter;
@@ -91,18 +98,27 @@ public class HomeActivity extends AppCompatActivity {
 
         //Cada 5 segundos refresca
         Observable.interval(0, 5, TimeUnit.SECONDS)
-                .flatMap(i -> yahooService.yglQuery(query, env)
-                        .toObservable()
-                )
+                // .flatMap(i -> Observable.<YahooStockResult>error(new RuntimeException("Oops")))
+                .flatMap(i -> yahooService.yglQuery(env,query).toObservable())
                 .subscribeOn(Schedulers.io())
                 .map(r -> r.getQuery().getResults().getQuote())
                 .flatMap(Observable::fromIterable)
                 .map(StockUpdate::create)
-                //  .doOnNext(this::saveStockUpdate)
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnError(error -> {
+                    log("doOnError", "error");
+                    Toast.makeText(this, "We couldn't reach internet - falling back to local data",
+                            Toast.LENGTH_SHORT).show();
+                })
+                .doOnNext(this::saveStockUpdate)
                 .subscribe(stockUpdate -> {
                     Log.d("APP", "New Update" + stockUpdate.getStockSymbol());
+                    noDataAvailableView.setVisibility(View.GONE);
                     stockDataAdapter.add(stockUpdate);
+                }, error -> {
+                    if (stockDataAdapter.getItemCount() == 0) {
+                        noDataAvailableView.setVisibility(View.VISIBLE);
+                    }
                 });
 
 //        Observable.just("APPLE","GOOGLE","TWRITER")
@@ -121,6 +137,10 @@ public class HomeActivity extends AppCompatActivity {
 
     }
 
+    private void saveStockUpdate(StockUpdate stockUpdate) {
+        log("saveStockUpdate", stockUpdate.getStockSymbol());
+        StorIOFactory.get(this).put().object(stockUpdate).prepare().asRxSingle().subscribe();
+     }
 
     private void log(Throwable throwable) {
         Log.e("APP", "Error", throwable);

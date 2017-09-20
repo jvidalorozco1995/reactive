@@ -47,7 +47,11 @@ public class StockUpdatePutResolver extends DefaultPutResolver<StockUpdate> {
     }
 
     private long getPrice(@NonNull BigDecimal value) {
-        return value.scaleByPowerOfTen(4).longValue();
+        if (value != null) {
+            return value.scaleByPowerOfTen(4).longValue();
+        } else {
+            return 0;
+        }
     }
 
     private long getDate(@NonNull Date date) {
