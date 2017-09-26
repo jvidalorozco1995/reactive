@@ -31,22 +31,14 @@ public class StorIOFactory {
         INSTANCE = DefaultStorIOSQLite.builder().sqliteOpenHelper(new StorIODbHelper(context))
                 .addTypeMapping(StockUpdate.class, SQLiteTypeMapping.<StockUpdate>builder()
                         .putResolver(new StockUpdatePutResolver())
-                        .getResolver(createGetResolver())
+                        .getResolver(new StockUpdateGetResolver())
                         .deleteResolver(createDeleteResolver())
                         .build()).build();
         return INSTANCE;
     }
 
 
-    private static GetResolver<StockUpdate> createGetResolver() {
-        return new DefaultGetResolver<StockUpdate>() {
-            @NonNull
-            @Override
-            public StockUpdate mapFromCursor(@NonNull Cursor cursor) {
-                return null;
-            }
-        };
-    }
+
 
     private static DeleteResolver<StockUpdate> createDeleteResolver() {
         return new DefaultDeleteResolver<StockUpdate>() {

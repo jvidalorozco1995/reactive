@@ -7,24 +7,24 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.pushtorefresh.storio.sqlite.StorIOSQLite;
+import com.pushtorefresh.storio.sqlite.queries.Query;
 
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+
 import io.reactivex.Observable;
-import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import perriferiait.com.androidtutorial.yahoo.RetrofitYahooServiceFactory;
 import perriferiait.com.androidtutorial.yahoo.YahooService;
+import perriferiait.com.androidtutorial.yahoo.storio.StockUpdateTable;
 import perriferiait.com.androidtutorial.yahoo.storio.StorIOFactory;
 
+
+import static hu.akarnokd.rxjava.interop.RxJavaInterop.toV2Observable;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -105,12 +105,24 @@ public class HomeActivity extends AppCompatActivity {
                 .flatMap(Observable::fromIterable)
                 .map(StockUpdate::create)
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnError(error -> {
-                    log("doOnError", "error");
-                    Toast.makeText(this, "We couldn't reach internet - falling back to local data",
-                            Toast.LENGTH_SHORT).show();
-                })
+                .doOnError(ErrorHandler.get())
                 .doOnNext(this::saveStockUpdate)
+                .onExceptionResumeNext(
+                        v2(StorIOFactory.get(this)
+                                .get()
+                                .listOfObjects(StockUpdate.class)
+                                .withQuery(Query.builder()
+                                        .table(StockUpdateTable.TABLE)
+                                        .orderBy("date DESC")
+                                        .limit(50)
+                                        .build())
+                                .prepare()
+                                .asRxObservable())
+                                .take(1)
+                                .flatMap(Observable::fromIterable)
+                )
+
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(stockUpdate -> {
                     Log.d("APP", "New Update" + stockUpdate.getStockSymbol());
                     noDataAvailableView.setVisibility(View.GONE);
@@ -135,6 +147,10 @@ public class HomeActivity extends AppCompatActivity {
             stockDataAdapter.add(stockUpdate);
         });*/
 
+    }
+
+    public static <T> Observable<T> v2(rx.Observable<T> source) {
+        return toV2Observable(source);
     }
 
     private void saveStockUpdate(StockUpdate stockUpdate) {
