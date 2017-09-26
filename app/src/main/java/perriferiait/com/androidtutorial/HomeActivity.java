@@ -7,6 +7,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.pushtorefresh.storio.sqlite.queries.Query;
 
@@ -20,6 +21,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import perriferiait.com.androidtutorial.yahoo.RetrofitYahooServiceFactory;
 import perriferiait.com.androidtutorial.yahoo.YahooService;
+import perriferiait.com.androidtutorial.yahoo.json.YahooStockResult;
 import perriferiait.com.androidtutorial.yahoo.storio.StockUpdateTable;
 import perriferiait.com.androidtutorial.yahoo.storio.StorIOFactory;
 
@@ -98,14 +100,20 @@ public class HomeActivity extends AppCompatActivity {
 
         //Cada 5 segundos refresca
         Observable.interval(0, 5, TimeUnit.SECONDS)
-                // .flatMap(i -> Observable.<YahooStockResult>error(new RuntimeException("Oops")))
-                .flatMap(i -> yahooService.yglQuery(env,query).toObservable())
+                 .flatMap(i -> Observable.<YahooStockResult>error(new RuntimeException("Oops")))
+               // .flatMap(i -> yahooService.yglQuery(env,query).toObservable())
                 .subscribeOn(Schedulers.io())
                 .map(r -> r.getQuery().getResults().getQuote())
                 .flatMap(Observable::fromIterable)
                 .map(StockUpdate::create)
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnError(ErrorHandler.get())
+                .doOnError(error -> {
+                    log("doOnError", "error");
+                    Toast.makeText(this, "We couldn't reach internet - falling back to local data",
+                            Toast.LENGTH_SHORT)
+                            .show();
+                })
+                //.doOnError(ErrorHandler.get())
                 .doOnNext(this::saveStockUpdate)
                 .onExceptionResumeNext(
                         v2(StorIOFactory.get(this)
